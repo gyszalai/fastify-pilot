@@ -1,0 +1,21 @@
+{
+  "name": "fastify-proba",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app/index.js",
+  "scripts": {
+    "start": "node app",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "PRETTY=true nodemon app/index.js"
+  },
+  "keywords": [],
+  "author": "Szalai Gyula <gyula.szalai@vanio.hu>",
+  "license": "ISC",
+  "dependencies": {
+    "fastify": "^1.1.1",
+    "uuid": "^3.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.17.1"
+  }
+}
