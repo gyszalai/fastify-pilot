@@ -1,7 +1,5 @@
 const uuid = require('uuid')
 
-const prettyPrint = process.env.PRETTY ? { forceColor: true } : undefined
-
 // Require the framework and instantiate it
 const fastify = require('fastify')({
   logger: {
@@ -9,59 +7,48 @@ const fastify = require('fastify')({
     genReqId: () => {
       return uuid.v4()
     },
-    prettyPrint
+    prettyPrint: process.env.NODE_ENV === 'dev' ? { forceColor: true } : undefined // pretty print in development mode
   }
 })
 
-console.log('>>>>>>>>>>>>>> ', fastify.log.levels.values)
+// register swagger plugin
+fastify.register(require('fastify-swagger'), {
+  exposeRoute: true,
+  swagger: {
+    info: {
+      title: 'Test swagger',
+      description: 'testing the fastify swagger api',
+      version: '0.1.0'
+    },
+    host: 'localhost',
+    schemes: ['http'],
+    consumes: ['application/json'],
+    produces: ['application/json'],
+    securityDefinitions: {
+      apiKey: {
+        type: 'apiKey',
+        name: 'apiKey',
+        in: 'header'
+      }
+    }
+  }
+})
 
-// // Declare a route
-// fastify.get('/', async (request, reply) => {
-//   return { hello: 'world' }
-// })
-
+// register simple middleware
 fastify.use(async (request, reply, next) => {
   console.log('before: ', Date.now())
   await next()
   console.log('after: ', Date.now())
 })
 
-fastify.route({
-  method: 'GET',
-  url: '/greet',
-  schema: {
-    // request needs to have a querystring with a `name` parameter
-    querystring: {
-      type: 'object',
-      required: ['name'],
-      properties: {
-        name: { type: 'string' }
-      },
-      additionalProperties: false
-    },
-    // the response needs to be an object with an `hello` property of type 'string'
-    response: {
-      200: {
-        type: 'object',
-        properties: {
-          hello: { type: 'string' }
-        }
-      }
-    },
-    // this function is executed for every request before the handler is executed
-    beforeHandler: async (request, reply) => {
-      // E.g. check authentication
-    }
-  },
-  handler: async (request, reply) => {
-    request.log.debug('greeting name: ', request.query.name)
-    return { hello: request.query.name }
-  }
-})
+// register user routes
+fastify.register(require('./routes.user'))
 
 // Run the server!
 const start = async () => {
   try {
+    await fastify.ready()
+    await fastify.swagger()
     await fastify.listen(3000)
     fastify.log.info(`server listening on`, fastify.server.address())
   } catch (err) {
@@ -70,3 +57,5 @@ const start = async () => {
   }
 }
 start()
+
+// console.log('>>>>>>>>>>>>>> ', fastify.log.levels.values)
